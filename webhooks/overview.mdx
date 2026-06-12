@@ -46,10 +46,16 @@ import crypto from 'crypto';
 
 function verifyWebhook(rawBody: string, signature: string, secret: string): boolean {
   const parts = signature.split(',');
-  if (parts.length !== 2) return false;
-  const [tPart, v1Part] = parts;
-  const timestamp = tPart.split('=')[1];
-  const receivedSig = v1Part.split('=')[1];
+  let timestamp: string | undefined;
+  let receivedSig: string | undefined;
+
+  for (const part of parts) {
+    const [key, ...valueParts] = part.split('=');
+    const value = valueParts.join('=');
+    if (key === 't') timestamp = value;
+    if (key === 'v1') receivedSig = value;
+  }
+
   if (!timestamp || !receivedSig) return false;
   const ts = parseInt(timestamp, 10);
   const now = Math.floor(Date.now() / 1000);
